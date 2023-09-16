@@ -139,6 +139,10 @@ namespace ProceduralParts
         {
             return Mathf.PI * rodDiameter * rodDiameter / 4 * RealLength * nbRods * (symmetryRods ? 2 : 1);
         }
+        public override float CalculateSurface()
+        {
+            return Mathf.PI * rodDiameter * (rodDiameter / 4 +  RealLength  ) * nbRods * (symmetryRods ? 2 : 1);
+        }
 
         public override bool SeekVolume(float targetVolume, int dir) => SeekVolume(targetVolume, Fields[nameof(length)], dir);
 
@@ -214,6 +218,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape Truss");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             GenerateMeshes(bottomDiameter / 2, topDiameter / 2, length, rodDiameter / 2, (int)nbRods, tiltAngle * Mathf.Deg2Rad, offsetAngle * Mathf.Deg2Rad, symmetryRods);
 
             // WriteMeshes in AbstractSoRShape typically does UpdateNodeSize, UpdateProps, RaiseModelAndColliderChanged

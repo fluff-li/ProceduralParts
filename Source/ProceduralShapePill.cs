@@ -162,6 +162,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape Pill");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             LinkedList<ProfilePoint> points = new LinkedList<ProfilePoint>();
 
             if (fillet == 0)
@@ -231,6 +232,15 @@ namespace ProceduralParts
             // we get: v = 1/24 pi (6 d^2 l+3 (pi-4) d f^2+(10-3 pi) f^3)
 
             return Mathf.PI / 24f * (6f * diameter * diameter * length + 3f * (Mathf.PI - 4) * diameter * fillet * fillet + (10f - 3f * Mathf.PI) * fillet * fillet * fillet);
+        }
+        public override float CalculateSurface()
+        {
+            // Cylinder lateral Surface = pi * d * (h - fillet)
+            // surface (top & bottom) = pi * (d - fillet)^2 / 2
+            // torus segment = 2 * Pi * a * c     a = fillet/Pi + (diameter - fillet)  c = Pi * d/2
+            //               = Pi * Pi * diameter * (fillet/Pi + diameter - fillet)
+            // pi * (d * (length - fillet) + ((d - fillet)^2 / 2) + (Pi * d * (fillet/Pi + d - fillet)))
+            return Mathf.PI * (diameter * (length - fillet) + (diameter - fillet) * (diameter - fillet) / 2f +  diameter * (fillet + diameter * Mathf.PI - fillet * Mathf.PI));
         }
 
         public override bool SeekVolume(float targetVolume, int dir=0)

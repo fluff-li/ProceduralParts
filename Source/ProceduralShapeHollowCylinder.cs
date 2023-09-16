@@ -89,6 +89,10 @@ namespace ProceduralParts
             // Volume of large cylinder - volume of small cylinder
             return Mathf.PI * length / 4f * (outerDiameter * outerDiameter - innerDiameter * innerDiameter);
         }
+        public override float CalculateSurface()
+        {
+            return Mathf.PI * (outerDiameter * length + (outerDiameter * outerDiameter - innerDiameter * innerDiameter) / 2);
+        }
 
         public override void NormalizeCylindricCoordinates(ShapeCoordinates coords)
         {
@@ -152,6 +156,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape HCyl");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             GenerateMeshes(outerDiameter / 2, innerDiameter / 2, length, numSides);
 
             GenerateColliders();

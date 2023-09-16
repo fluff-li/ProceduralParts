@@ -128,6 +128,12 @@ namespace ProceduralParts
             return Mathf.PI * length / 12f * (bottomOuterDiameter * bottomOuterDiameter + bottomOuterDiameter * topOuterDiameter + topOuterDiameter * topOuterDiameter
                                              - bottomInnerDiameter * bottomInnerDiameter - bottomInnerDiameter * topInnerDiameter - topInnerDiameter * topInnerDiameter);
         }
+        public override float CalculateSurface()
+        {
+            return  Mathf.PI / 2 * (Mathf.Sqrt(Mathf.Pow(bottomOuterDiameter - topOuterDiameter, 2) + length * length) * (bottomOuterDiameter + topOuterDiameter)
+                                   + 0.5f * (bottomOuterDiameter * bottomOuterDiameter - bottomInnerDiameter * bottomInnerDiameter 
+                                            + topOuterDiameter * topOuterDiameter - topInnerDiameter * topInnerDiameter));
+        }
 
         public override void NormalizeCylindricCoordinates(ShapeCoordinates coords)
         {
@@ -242,6 +248,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape HCone");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             GenerateMeshes(bottomOuterDiameter / 2, bottomInnerDiameter / 2, topOuterDiameter / 2, topInnerDiameter / 2, length, numSides);
 
             GenerateColliders();

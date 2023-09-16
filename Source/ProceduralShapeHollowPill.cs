@@ -128,6 +128,23 @@ namespace ProceduralParts
             // path of geometric centre: 2 * pi * majorRadius
             return ((Mathf.PI / 4f - 1f) * fillet * fillet + length * (outerDiameter - innerDiameter) / 2) * 2 * Mathf.PI * MajorRadius;
         }
+        public override float CalculateSurface()
+        {
+            // cilinder outter Pi * outerDiameter * (length - fillet)
+            // cilinder inner Pi * innerDiameter * (length - fillet)
+            // surface top & bottom Pi* ((outerDiameter - fillet)^2 - (innerDiameter + fillet)^2) / 4
+            // torus = 4 * pi * (diameter/2 - fillet/2) * fillet/2
+            //       = 2 * pi * (diameter - fillet) * fillet
+            // Pi * a
+            // a = outerDiameter * (length - fillet) 
+            // + innerDiameter * (length - fillet) 
+            // + ((outerDiameter - fillet)^2 - (innerDiameter + fillet)^2) / 4 
+            // + 2 * (diameter - fillet) * fillet
+            return Mathf.PI * ( (length - fillet) * (outerDiameter + innerDiameter) 
+                                + (Mathf.Pow(outerDiameter - fillet, 2) - Mathf.Pow(innerDiameter - fillet,2)) / 4 
+                                + 2 * (outerDiameter -fillet ) * fillet 
+                              );
+        }
 
         public override void NormalizeCylindricCoordinates(ShapeCoordinates coords)
         {
@@ -197,6 +214,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape HPill");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             GenerateMeshes(MajorRadius, MinorRadius, length, fillet / 2, (int)numSides);
 
             GenerateColliders();

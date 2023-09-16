@@ -31,6 +31,7 @@ namespace ProceduralParts
         private static bool staticallyResetPartUpgrades = false;
         public bool TUEnabled => installedTU && part.GetComponent("KSPTextureSwitch") is Component;
         public float Volume => CurrentShape.Volume;
+        public float SurfaceArea => CurrentShape.SurfaceArea;
 
         [KSPField] public float diameterMax = float.PositiveInfinity;
         [KSPField] public float lengthMax = float.PositiveInfinity;

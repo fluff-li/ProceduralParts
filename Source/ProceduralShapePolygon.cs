@@ -148,6 +148,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape Polygon");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             OuterDiameter = InnerDiameter / OuterToInnerFactor;
             GenerateMeshes();
             // WriteMeshes in AbstractSoRShape typically does UpdateNodeSize, UpdateProps, RaiseModelAndColliderChanged
@@ -201,6 +202,8 @@ namespace ProceduralParts
 
         public override float CalculateVolume() => VolumeCalculated;
         private float CalculateVolume(float area, float length) => area * length;
+        public override float CalculateSurface() => NormSideLength * length + 2 * Area;
+
         public override bool SeekVolume(float targetVolume, int dir) => SeekVolume(targetVolume, Fields[nameof(length)], dir);
 
         public override void UpdateTFInterops()

@@ -308,6 +308,7 @@ namespace ProceduralParts
         {
             Profiler.BeginSample("UpdateShape BCone");
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             SetControlPoints(length, topDiameter, bottomDiameter);
             // Ensure correct control points if something called AdjustDimensionBounds or CalculateVolume when handling volume change event
             WriteBezier();
@@ -423,6 +424,11 @@ namespace ProceduralParts
                                  (p[3].y - p[2].y) * (1f / 84f * p[0].x * p[0].x + 1f / 28f * p[0].x * p[1].x + 1f / 35f * p[0].x * p[2].x + 3f / 70f * p[1].x * p[1].x + 3f / 28f * p[1].x * p[2].x + 1f / 84f * p[0].x * p[3].x + 3f / 28f * p[2].x * p[2].x + 1f / 14f * p[1].x * p[3].x + 1f / 4f * p[2].x * p[3].x + 1f / 3f * p[3].x * p[3].x));
 
             return Mathf.PI * M_y;
+        }
+        public override float CalculateSurface()
+        {
+            // for now return an Cone approximation
+            return Mathf.Sqrt(4f * length * length + Mathf.Pow((bottomDiameter - topDiameter), 2)) * (bottomDiameter + topDiameter) * Mathf.PI / 4f;
         }
 
         public override bool SeekVolume(float targetVolume, int dir = 0) => SeekVolume(targetVolume, Fields[nameof(length)], dir);

@@ -89,7 +89,19 @@ namespace ProceduralParts
                 }
             }
         }
+        public float SurfaceArea
+        {
+            get => _surfaceArea;
+            protected set
+            {
+                if (value != _surfaceArea)
+                {
+                    _surfaceArea = value;
+                }
+            }
+        }
         private float _volume;
+        private float _surfaceArea;
 
         #endregion
 
@@ -139,6 +151,7 @@ namespace ProceduralParts
         }
 
         public abstract float CalculateVolume();
+        public abstract float CalculateSurface();
         public abstract void AdjustDimensionBounds();
         public abstract void TranslateAttachmentsAndNodes(BaseField f, object obj);
 

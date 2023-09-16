@@ -147,6 +147,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape Cone");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             Vector2 norm = new Vector2(length, (bottomDiameter - topDiameter) / 2f);
             norm.Normalize();
 
@@ -252,6 +253,10 @@ namespace ProceduralParts
         public virtual float CalculateVolume(float length, float topDiameter, float bottomDiameter)
         {
             return (Mathf.PI * length * (topDiameter * topDiameter + topDiameter * bottomDiameter + bottomDiameter * bottomDiameter)) / 12f;
+        }
+        public override float CalculateSurface()
+        {
+            return Mathf.PI / 2 * ((Mathf.Pow(bottomDiameter, 2) + Mathf.Pow(bottomDiameter , 2)) / 2 + Mathf.Sqrt(Mathf.Pow(bottomDiameter - topDiameter, 2) + length * length) * (bottomDiameter + topDiameter)) ;
         }
         public override bool SeekVolume(float targetVolume, int dir) => SeekVolume(targetVolume, Fields[nameof(length)], dir);
 

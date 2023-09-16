@@ -57,6 +57,7 @@ namespace ProceduralParts
             Profiler.BeginSample("UpdateShape Cyl");
             part.CoMOffset = CoMOffset;
             Volume = CalculateVolume();
+            SurfaceArea = CalculateSurface();
             Vector2 norm = new Vector2(1, 0);
 
             WriteMeshes(
@@ -95,6 +96,10 @@ namespace ProceduralParts
         public float CalculateVolume(float length, float diameter)
         {
             return diameter * diameter * 0.25f * Mathf.PI * length;
+        }
+        public override float CalculateSurface()
+        {
+            return Mathf.PI * diameter * (length  + diameter  / 2);
         }
 
         public override bool SeekVolume(float targetVolume, int dir) => SeekVolume(targetVolume, Fields[nameof(length)], dir);
