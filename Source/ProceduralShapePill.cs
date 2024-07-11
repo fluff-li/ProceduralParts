@@ -161,7 +161,11 @@ namespace ProceduralParts
         {
             Profiler.BeginSample("UpdateShape Pill");
             part.CoMOffset = CoMOffset;
-            Volume = CalculateVolume();
+            MinDiameter = MaxDiameter = diameter;
+            InnerMinDiameter = InnerMaxDiameter = -1f;
+            Length = length;
+            NominalVolume = CalculateVolume();
+            Volume = NominalVolume;
             SurfaceArea = CalculateSurface();
             LinkedList<ProfilePoint> points = new LinkedList<ProfilePoint>();
 
@@ -211,7 +215,7 @@ namespace ProceduralParts
         }
 
         public override float CalculateVolume() => CalculateVolume(length, diameter, fillet);
-        public virtual float CalculateVolume(float length, float diameter, float fillet)
+        public static float CalculateVolume(float length, float diameter, float fillet)
         {
             // To get formula for part volume: l = length, d = diameter, f = fillet
             // body cylinder = pi * r^2 * h 

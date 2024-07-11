@@ -8,7 +8,7 @@ using UnityEngine.Profiling;
 
 namespace ProceduralParts
 {
-    public class ProceduralPart : PartModule, IPartCostModifier
+    public class ProceduralPart : PartModule, IPartCostModifier, IPartMassModifier
     {
         public static readonly string ModTag = "[ProceduralParts]";
         public const string PAWGroupName = "ProcParts";
@@ -32,6 +32,8 @@ namespace ProceduralParts
         public bool TUEnabled => installedTU && part.GetComponent("KSPTextureSwitch") is Component;
         public float Volume => CurrentShape.Volume;
         public float SurfaceArea => CurrentShape.SurfaceArea;
+        public float Diameter => CurrentShape.MaxDiameter;
+        public float Length => CurrentShape.Length;
 
         [KSPField] public float diameterMax = float.PositiveInfinity;
         [KSPField] public float lengthMax = float.PositiveInfinity;
@@ -44,6 +46,14 @@ namespace ProceduralParts
         [KSPField] public float lengthLargeStep = 1.0f;
         [KSPField] public float lengthSmallStep = 0.125f;
         [KSPField] public bool allowCurveTweaking = true;
+
+        [KSPField(isPersistant = true, guiActiveEditor = false, guiName = "Stringer Mass", groupName = PAWGroupName, groupDisplayName = PAWGroupDisplayName)]
+        [UI_FloatRange(minValue = 0f, maxValue = 1.0f, stepIncrement = 0.01f)]
+        public float density = 0;
+        public const float NominalDensity = 0.15f;
+        [KSPField] public float minDensity = 0f;
+        [KSPField] public float maxDensity = 0f;
+        [KSPField] public float stepDensity = 0.01f;
 
         public static void StaticInit()
         {
@@ -69,6 +79,8 @@ namespace ProceduralParts
             // An existing vessel part or .craft file that has never set this value before, but not the availablePart
             if (HighLogic.LoadedScene != GameScenes.LOADING && !node.HasValue(nameof(forceLegacyTextures)))
                 forceLegacyTextures = true;
+
+            SetPFFields();
         }
 
         public override string GetInfo()
@@ -152,6 +164,12 @@ namespace ProceduralParts
                 GameEvents.onVariantApplied.Add(OnVariantApplied);
                 GameEvents.onGameSceneSwitchRequested.Add(OnEditorExit);
             }
+            SetPFFields();
+
+            // Done here and done in OnStartFinished in TankContentSwitcher to get ordering right
+            // since these get fired in reverse-add order
+            if (HighLogic.LoadedSceneIsEditor)
+                GameEvents.onEditorShipModified.Add(OnShipModified);
             Profiler.EndSample();
         }
 
@@ -166,6 +184,7 @@ namespace ProceduralParts
         {
             GameEvents.onVariantApplied.Remove(OnVariantApplied);
             GameEvents.onGameSceneSwitchRequested.Remove(OnEditorExit);
+            GameEvents.onEditorShipModified.Remove(OnShipModified);
         }
 
         private void OnShowTUPickerGUIChanged(BaseField f, object obj)
@@ -496,15 +515,16 @@ namespace ProceduralParts
         [KSPField]
         public bool displayCost = true;
 
+        private bool? _hasMFT = null;
+
 		public ModifierChangeWhen GetModuleCostChangeWhen () => ModifierChangeWhen.FIXED;
 
         private bool ContainsMFT(Part p)
         {
-            foreach (PartModule pm in p.Modules)
-            {
-                if (pm.name.Equals("ModuleFuelTanks")) return true;
-            }
-            return false;
+            if (!_hasMFT.HasValue)
+                _hasMFT = part.Modules.Contains("ModuleFuelTanks");
+
+            return _hasMFT.Value;
         }
 
         private void GetResourceCosts(Part p, out float maxCost, out float actualCost)
@@ -594,6 +614,67 @@ namespace ProceduralParts
             foreach (var prop in GetComponents<IProp>())
                 prop.UpdateProp();
         }
+
+        #region Mass override for hollow tanks
+
+        [KSPField]
+        public float densityForHollowVolume = 0f;
+
+        [KSPField(isPersistant = true)]
+        public float moduleMass = 0f;
+
+        public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
+
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
+        {
+            if (shape == null || !HighLogic.LoadedSceneIsEditor)
+                return moduleMass;
+
+            if (shape.NominalVolume > shape.Volume)
+            {
+                moduleMass = densityForHollowVolume * (shape.NominalVolume - shape.Volume);
+                if (density > 0f)
+                    moduleMass *= density * (1f / NominalDensity);
+            }
+            else
+            {
+                moduleMass = 0f;
+            }
+
+            return moduleMass;
+        }
+
+        private void SetPFFields()
+        {
+            var fieldDensity = Fields[nameof(density)];
+            if (minDensity > 0f && maxDensity > 0f)
+            {
+                var floatRange = fieldDensity.uiControlEditor as UI_FloatRange;
+                floatRange.minValue = minDensity;
+                floatRange.maxValue = maxDensity;
+                floatRange.stepIncrement = stepDensity;
+                fieldDensity.guiActiveEditor = true;
+                // The only thing we're doing is in GetModuleMass and GetModuleCost
+                // which means that they get fired for free when a slider changes
+                // (via OnEditorShipModified)
+                //floatRange.onFieldChanged = floatRange.onSymmetryFieldChanged = (a, b) =>
+                //{
+                //    GetModuleMass(part.prefabMass, ModifierStagingSituation.UNSTAGED);
+                //};
+            }
+            else
+            {
+                fieldDensity.guiActiveEditor = false;
+            }
+        }
+
+        private void OnShipModified(ShipConstruct _)
+        {
+            // This will recalc mass
+            GetModuleMass(part.prefabMass, ModifierStagingSituation.UNSTAGED);
+        }
+
+        #endregion
 
         #region TestFlight
         public static Type tfInterface = null;
